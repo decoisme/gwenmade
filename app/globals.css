@@ -194,6 +194,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .comparison-plan a:hover { color: var(--accent-deep); }
 .highlight-plan, .highlight-value { background: #f3e9e1; }
 .comparison-value { font-size: 11px; }
+.comparison-value.not-included, .mobile-compare-row dd.not-included { color: #9a948a; }
 .pricing-footnote { margin: 20px 0 0; color: var(--muted); font-size: 13px; }
 .mobile-comparison { display: none; }
 

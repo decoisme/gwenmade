@@ -188,10 +188,10 @@ function Services({ lang }: { lang: Lang }) {
 }
 
 const packages = [
-  { name: "Lite", price: "599.000", renewal: "159.000", domain: ".my.id", pages: ["Ringkas, 3–4 section", "Compact, 3–4 sections"], copy: ["Materi dari kamu", "Copy from you"], automation: ["Tombol langsung ke WhatsApp", "Direct WhatsApp button"], tracking: ["Belum termasuk", "Not included"], email: ["Belum termasuk", "Not included"], motion: ["Belum termasuk", "Not included"], revision: ["2x revisi", "2x revisions"], delivery: ["7–10 hari kerja", "7–10 working days"], featured: false },
-  { name: "Standard", price: "899.000", renewal: "379.000", domain: ".com / .id", pages: ["Standar, 5–6 section", "Standard, 5–6 sections"], copy: ["Rapihin layout & copy", "Layout and copy polish"], automation: ["WhatsApp + form", "WhatsApp + form"], tracking: ["Meta Pixel basic", "Basic Meta Pixel"], email: ["Belum termasuk", "Not included"], motion: ["Belum termasuk", "Not included"], revision: ["3x revisi", "3x revisions"], delivery: ["7–10 hari kerja", "7–10 working days"], featured: false },
-  { name: "Pro", price: "1.399.000", renewal: "499.000", domain: ".com / .id", pages: ["Fokus konversi, 7–8 section", "Conversion-focused, 7–8 sections"], copy: ["Copy jualan pakai AIDA", "AIDA sales copy"], automation: ["WhatsApp + auto ke Google Sheets", "WhatsApp + auto Google Sheets"], tracking: ["Meta Pixel + Google Analytics", "Meta Pixel + Google Analytics"], email: ["1 email domain", "1 domain email"], motion: ["Belum termasuk", "Not included"], revision: ["5x revisi", "5x revisions"], delivery: ["10–14 hari kerja", "10–14 working days"], featured: true },
-  { name: "Scale", price: "1.999.000", renewal: "559.000", domain: ".com / .id / .co.id", pages: ["Lebih luas, 9–12 section", "Extended, 9–12 sections"], copy: ["Copywriting full", "Full copywriting"], automation: ["WhatsApp + Sheets + webhook", "WhatsApp + Sheets + webhook"], tracking: ["Pixel FB, Google, TikTok", "FB, Google, TikTok pixels"], email: ["Maks. 3 email domain", "Up to 3 domain emails"], motion: ["Animasi GSAP", "GSAP motion"], revision: ["Revisi minor tanpa batas, 14 hari", "Unlimited minor revisions, 14 days"], delivery: ["10–14 hari kerja", "10–14 working days"], featured: false },
+  { name: "Lite", price: "599.000", renewal: "159.000", domain: ".my.id", pages: ["Ringkas, 3–4 section", "Compact, 3–4 sections"], copy: ["Materi dari kamu", "Copy from you"], automation: ["Tombol langsung ke WhatsApp", "Direct WhatsApp button"], tracking: ["Belum termasuk", "Not included"], email: ["Belum termasuk", "Not included"], revision: ["2x revisi", "2x revisions"], delivery: ["7–10 hari kerja", "7–10 working days"], featured: false },
+  { name: "Standard", price: "899.000", renewal: "379.000", domain: ".com / .id", pages: ["Standar, 5–6 section", "Standard, 5–6 sections"], copy: ["Rapihin layout & copy", "Layout and copy polish"], automation: ["WhatsApp + form", "WhatsApp + form"], tracking: ["Meta Pixel basic", "Basic Meta Pixel"], email: ["Belum termasuk", "Not included"], revision: ["3x revisi", "3x revisions"], delivery: ["7–10 hari kerja", "7–10 working days"], featured: false },
+  { name: "Pro", price: "1.399.000", renewal: "499.000", domain: ".com / .id", pages: ["Fokus konversi, 7–8 section", "Conversion-focused, 7–8 sections"], copy: ["Copy jualan pakai AIDA", "AIDA sales copy"], automation: ["WhatsApp + auto ke Google Sheets", "WhatsApp + auto Google Sheets"], tracking: ["Meta Pixel + Google Analytics", "Meta Pixel + Google Analytics"], email: ["1 email domain", "1 domain email"], revision: ["5x revisi", "5x revisions"], delivery: ["10–14 hari kerja", "10–14 working days"], featured: true },
+  { name: "Scale", price: "1.999.000", renewal: "559.000", domain: ".com / .id / .co.id", pages: ["Lebih luas, 9–12 section", "Extended, 9–12 sections"], copy: ["Copywriting full", "Full copywriting"], automation: ["WhatsApp + Sheets + webhook", "WhatsApp + Sheets + webhook"], tracking: ["Pixel FB, Google, TikTok", "FB, Google, TikTok pixels"], email: ["Maks. 3 email domain", "Up to 3 domain emails"], revision: ["Revisi minor tanpa batas, 14 hari", "Unlimited minor revisions, 14 days"], delivery: ["10–14 hari kerja", "10–14 working days"], featured: false },
 ];
 
 function packageLink(name: string, lang: Lang) {
@@ -211,8 +211,8 @@ function Pricing({ lang }: { lang: Lang }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const flipState = useRef<ReturnType<typeof Flip.getState> | null>(null);
   const fieldLabels = lang === "id"
-    ? ["Perpanjangan / tahun", "Domain", "Hosting + SSL", "Panjang halaman", "Copywriting", "Automasi", "Tracking & ads", "Email bisnis", "Motion design", "Revisi", "Waktu pengerjaan"]
-    : ["Annual renewal", "Domain", "Hosting + SSL", "Page length", "Copywriting", "Automation", "Tracking & ads", "Business email", "Motion design", "Revisions", "Turnaround"];
+    ? ["Perpanjangan / tahun", "Domain", "Hosting + SSL", "Panjang halaman", "Copywriting", "Automasi", "Tracking & ads", "Email bisnis", "Revisi", "Waktu pengerjaan"]
+    : ["Annual renewal", "Domain", "Hosting + SSL", "Page length", "Copywriting", "Automation", "Tracking & ads", "Business email", "Revisions", "Turnaround"];
 
   useLayoutEffect(() => {
     if (!flipState.current) return;
@@ -248,7 +248,6 @@ function Pricing({ lang }: { lang: Lang }) {
     item.automation[lang === "id" ? 0 : 1],
     item.tracking[lang === "id" ? 0 : 1],
     item.email[lang === "id" ? 0 : 1],
-    item.motion[lang === "id" ? 0 : 1],
     item.revision[lang === "id" ? 0 : 1],
     item.delivery[lang === "id" ? 0 : 1],
   ];
@@ -270,14 +269,14 @@ function Pricing({ lang }: { lang: Lang }) {
               <p className="renewal">{copy(lang, "per proyek", "per project")} <span>· {copy(lang, "perpanjangan", "renewal")} Rp {item.renewal}/{copy(lang, "thn", "yr")}</span></p>
               <a className={`button ${item.featured ? "button-primary" : "button-outline"} plan-cta`} href={packageLink(item.name, lang)} target="_blank" rel="noreferrer">{copy(lang, "Pilih paket", "Choose package")} <span>↗︎</span></a>
               <div className="plan-includes"><span>{copy(lang, "YANG TERMASUK", "WHAT’S INCLUDED")}</span><ul>
-                {[`Domain ${item.domain}`, lang === "id" ? "Hosting + SSL · 1 tahun" : "Hosting + SSL · 1 year", item.pages[lang === "id" ? 0 : 1], item.copy[lang === "id" ? 0 : 1], item.automation[lang === "id" ? 0 : 1], item.tracking[lang === "id" ? 0 : 1], item.email[lang === "id" ? 0 : 1], item.motion[lang === "id" ? 0 : 1], item.revision[lang === "id" ? 0 : 1], item.delivery[lang === "id" ? 0 : 1]].map((text, featureIndex) => <FeatureLine text={text} key={`${item.name}-${featureIndex}`} />)}
+                {[`Domain ${item.domain}`, lang === "id" ? "Hosting + SSL · 1 tahun" : "Hosting + SSL · 1 year", item.pages[lang === "id" ? 0 : 1], item.copy[lang === "id" ? 0 : 1], item.automation[lang === "id" ? 0 : 1], item.tracking[lang === "id" ? 0 : 1], item.email[lang === "id" ? 0 : 1], item.revision[lang === "id" ? 0 : 1], item.delivery[lang === "id" ? 0 : 1]].map((text, featureIndex) => <FeatureLine text={text} key={`${item.name}-${featureIndex}`} />)}
               </ul></div>
             </article>
           )) : (
             <>
               <div className="comparison-table pricing-item" role="region" tabIndex={0} aria-label={copy(lang, "Perbandingan paket", "Package comparison")}>
                 <div className="comparison-row comparison-head"><span className="comparison-label">{copy(lang, "PAKET", "PACKAGE")}</span>{packages.map((item) => <div className={`comparison-plan ${item.featured ? "highlight-plan" : ""}`} data-flip-id={`package-${item.name}`} key={item.name}><span>{item.name}</span><strong>Rp {item.price}</strong><a href={packageLink(item.name, lang)} target="_blank" rel="noreferrer">{copy(lang, "Pilih", "Choose")} ↗︎</a></div>)}</div>
-                {fieldLabels.map((label, rowIndex) => <div className="comparison-row" key={label}><span className="comparison-label">{label}</span>{packages.map((item) => <span className={`comparison-value ${item.featured ? "highlight-value" : ""}`} key={item.name}>{planValues(item)[rowIndex]}</span>)}</div>)}
+                {fieldLabels.map((label, rowIndex) => <div className="comparison-row" key={label}><span className="comparison-label">{label}</span>{packages.map((item) => <span className={`comparison-value ${item.featured ? "highlight-value" : ""} ${planValues(item)[rowIndex] === (lang === "id" ? "Belum termasuk" : "Not included") ? "not-included" : ""}`} key={item.name}>{planValues(item)[rowIndex]}</span>)}</div>)}
               </div>
               <div className="mobile-comparison">
                 {packages.map((item, index) => (
@@ -285,7 +284,7 @@ function Pricing({ lang }: { lang: Lang }) {
                     {item.featured && <div className="best-value">{copy(lang, "PALING DIPILIH", "BEST VALUE")}</div>}
                     <div className="mobile-compare-head"><div><span className="mobile-compare-index">0{index + 1} / 04</span><h3>{item.name}</h3></div><strong>Rp {item.price}</strong></div>
                     <a className={`button ${item.featured ? "button-primary" : "button-outline"} mobile-compare-cta`} href={packageLink(item.name, lang)} target="_blank" rel="noreferrer">{copy(lang, "Pilih paket ini", "Choose this plan")} <span>↗︎</span></a>
-                    <dl className="mobile-compare-details">{fieldLabels.map((label, rowIndex) => <div className="mobile-compare-row" key={label}><dt>{label}</dt><dd>{planValues(item)[rowIndex]}</dd></div>)}</dl>
+                    <dl className="mobile-compare-details">{fieldLabels.map((label, rowIndex) => <div className="mobile-compare-row" key={label}><dt>{label}</dt><dd className={planValues(item)[rowIndex] === (lang === "id" ? "Belum termasuk" : "Not included") ? "not-included" : ""}>{planValues(item)[rowIndex]}</dd></div>)}</dl>
                   </article>
                 ))}
               </div>
