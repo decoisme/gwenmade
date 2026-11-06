@@ -94,7 +94,7 @@ function Navbar({ lang, activeSection, onToggleLanguage }: { lang: Lang; activeS
             <button type="button" aria-pressed={lang === "en"} onClick={() => lang !== "en" && onToggleLanguage()}>EN</button>
           </div>
           <details className="contact-menu">
-            <summary>{copy(lang, "Ngobrol yuk", "Let’s talk")} <span>↗</span></summary>
+            <summary>{copy(lang, "Ngobrol yuk", "Let’s talk")} <span>↗︎</span></summary>
             <div className="contact-popover">
               {contacts.map((contact) => (
                 <a href={contact.href} key={contact.label} target="_blank" rel="noreferrer">
@@ -122,7 +122,7 @@ function Hero({ lang }: { lang: Lang }) {
           <h1 className="reveal">{lang === "id" ? <>Bikin ruang<br />buat brand-mu<br /><em>jadi pilihan.</em></> : <>Make room<br />for your brand<br /><em>to be chosen.</em></>}</h1>
           <p className="hero-description reveal">{copy(lang, "Landing page custom yang merangkum cerita brand-mu dengan jelas, terasa dekat, dan siap mengubah kunjungan jadi obrolan.", "Custom landing pages that tell your brand story clearly, feel human, and turn visits into conversations.")}</p>
           <div className="hero-actions reveal">
-            <a className="button button-primary" href="#pricing">{copy(lang, "Lihat paket", "Explore packages")} <span>↗</span></a>
+            <a className="button button-primary" href="#pricing">{copy(lang, "Lihat paket", "Explore packages")} <span>↗︎</span></a>
             <a className="button button-text" href={whatsappLink(copy(lang, "Hai GwenMade, aku mau konsultasi soal landing page.", "Hi GwenMade, I’d love to talk about a landing page."))} target="_blank" rel="noreferrer">{copy(lang, "Konsultasi dulu", "Talk it through")}</a>
           </div>
         </div>
@@ -135,7 +135,7 @@ function Hero({ lang }: { lang: Lang }) {
       <div className="hero-bottomline editorial-wrap">
         <span>{copy(lang, "DARI IDE SAMPAI TAYANG", "FROM FIRST IDEA TO LAUNCH")}</span>
         <span>{copy(lang, "CUSTOM SEJAK LAYAR PERTAMA", "CUSTOM FROM THE VERY FIRST SCREEN")}</span>
-        <a href="#services" className="scroll-cue"><span>{copy(lang, "LIHAT CARA KERJANYA", "SEE HOW IT WORKS")}</span><span>↓</span></a>
+        <a href="#services" className="scroll-cue"><span>{copy(lang, "LIHAT CARA KERJANYA", "SEE HOW IT WORKS")}</span><span>↓︎</span></a>
       </div>
     </section>
   );
@@ -151,7 +151,7 @@ const featureData = [
 function AutomationCanvas({ lang }: { lang: Lang }) {
   return (
     <div className="automation-canvas" aria-label={copy(lang, "Ilustrasi alur data lead", "Illustration of the lead data flow")}>
-      <div className="automation-flow"><span>{copy(lang, "FORM MASUK", "FORM SUBMITTED")}</span><b>→</b><span>GOOGLE SHEETS</span><b>→</b><span>META PIXEL</span></div>
+      <div className="automation-flow"><span>{copy(lang, "FORM MASUK", "FORM SUBMITTED")}</span><b>→︎</b><span>GOOGLE SHEETS</span><b>→︎</b><span>META PIXEL</span></div>
       <div className="sheet-window">
         <div className="sheet-head"><span>LEAD MASUK / LIVE</span><span><i /> {copy(lang, "TERHUBUNG", "CONNECTED")}</span></div>
         <div className="sheet-row sheet-cols"><span>NAMA</span><span>PRODUK</span><span>STATUS</span></div>
@@ -268,7 +268,7 @@ function Pricing({ lang }: { lang: Lang }) {
               <div className="price-top"><span className="plan-name">{item.name}</span><span className="plan-index">0{index + 1} / 04</span></div>
               <div className="price-amount"><small>Rp</small>{item.price}</div>
               <p className="renewal">{copy(lang, "per proyek", "per project")} <span>· {copy(lang, "perpanjangan", "renewal")} Rp {item.renewal}/{copy(lang, "thn", "yr")}</span></p>
-              <a className={`button ${item.featured ? "button-primary" : "button-outline"} plan-cta`} href={packageLink(item.name, lang)} target="_blank" rel="noreferrer">{copy(lang, "Pilih paket", "Choose package")} <span>↗</span></a>
+              <a className={`button ${item.featured ? "button-primary" : "button-outline"} plan-cta`} href={packageLink(item.name, lang)} target="_blank" rel="noreferrer">{copy(lang, "Pilih paket", "Choose package")} <span>↗︎</span></a>
               <div className="plan-includes"><span>{copy(lang, "YANG TERMASUK", "WHAT’S INCLUDED")}</span><ul>
                 {[`Domain ${item.domain}`, lang === "id" ? "Hosting + SSL · 1 tahun" : "Hosting + SSL · 1 year", item.pages[lang === "id" ? 0 : 1], item.copy[lang === "id" ? 0 : 1], item.automation[lang === "id" ? 0 : 1], item.tracking[lang === "id" ? 0 : 1], item.email[lang === "id" ? 0 : 1], item.motion[lang === "id" ? 0 : 1], item.revision[lang === "id" ? 0 : 1], item.delivery[lang === "id" ? 0 : 1]].map((text, featureIndex) => <FeatureLine text={text} key={`${item.name}-${featureIndex}`} />)}
               </ul></div>
@@ -276,7 +276,7 @@ function Pricing({ lang }: { lang: Lang }) {
           )) : (
             <>
               <div className="comparison-table pricing-item" role="region" tabIndex={0} aria-label={copy(lang, "Perbandingan paket", "Package comparison")}>
-                <div className="comparison-row comparison-head"><span className="comparison-label">{copy(lang, "PAKET", "PACKAGE")}</span>{packages.map((item) => <div className={`comparison-plan ${item.featured ? "highlight-plan" : ""}`} data-flip-id={`package-${item.name}`} key={item.name}><span>{item.name}</span><strong>Rp {item.price}</strong><a href={packageLink(item.name, lang)} target="_blank" rel="noreferrer">{copy(lang, "Pilih", "Choose")} ↗</a></div>)}</div>
+                <div className="comparison-row comparison-head"><span className="comparison-label">{copy(lang, "PAKET", "PACKAGE")}</span>{packages.map((item) => <div className={`comparison-plan ${item.featured ? "highlight-plan" : ""}`} data-flip-id={`package-${item.name}`} key={item.name}><span>{item.name}</span><strong>Rp {item.price}</strong><a href={packageLink(item.name, lang)} target="_blank" rel="noreferrer">{copy(lang, "Pilih", "Choose")} ↗︎</a></div>)}</div>
                 {fieldLabels.map((label, rowIndex) => <div className="comparison-row" key={label}><span className="comparison-label">{label}</span>{packages.map((item) => <span className={`comparison-value ${item.featured ? "highlight-value" : ""}`} key={item.name}>{planValues(item)[rowIndex]}</span>)}</div>)}
               </div>
               <div className="mobile-comparison">
@@ -284,7 +284,7 @@ function Pricing({ lang }: { lang: Lang }) {
                   <article className={`mobile-compare-card ${item.featured ? "price-featured" : ""}`} key={item.name}>
                     {item.featured && <div className="best-value">{copy(lang, "PALING DIPILIH", "BEST VALUE")}</div>}
                     <div className="mobile-compare-head"><div><span className="mobile-compare-index">0{index + 1} / 04</span><h3>{item.name}</h3></div><strong>Rp {item.price}</strong></div>
-                    <a className={`button ${item.featured ? "button-primary" : "button-outline"} mobile-compare-cta`} href={packageLink(item.name, lang)} target="_blank" rel="noreferrer">{copy(lang, "Pilih paket ini", "Choose this plan")} <span>↗</span></a>
+                    <a className={`button ${item.featured ? "button-primary" : "button-outline"} mobile-compare-cta`} href={packageLink(item.name, lang)} target="_blank" rel="noreferrer">{copy(lang, "Pilih paket ini", "Choose this plan")} <span>↗︎</span></a>
                     <dl className="mobile-compare-details">{fieldLabels.map((label, rowIndex) => <div className="mobile-compare-row" key={label}><dt>{label}</dt><dd>{planValues(item)[rowIndex]}</dd></div>)}</dl>
                   </article>
                 ))}
@@ -309,7 +309,7 @@ function Process({ lang }: { lang: Lang }) {
   return (
     <section className="process-section editorial-wrap" id="process">
       <div className="process-heading reveal"><span className="section-index">03 / HOW IT COMES TOGETHER</span><h2>{lang === "id" ? <>Dari obrolan<br /><em>sampai tayang.</em></> : <>From first chat<br /><em>to launch day.</em></>}</h2></div>
-      <div className="process-list">{processSteps.map((step) => <article className="process-step reveal" key={step.no}><span className="process-number">{step.no}</span><div><h3>{step.title[lang === "id" ? 0 : 1]}</h3><p>{step.body[lang === "id" ? 0 : 1]}</p></div><span className="step-mark" aria-hidden="true">↗</span></article>)}</div>
+      <div className="process-list">{processSteps.map((step) => <article className="process-step reveal" key={step.no}><span className="process-number">{step.no}</span><div><h3>{step.title[lang === "id" ? 0 : 1]}</h3><p>{step.body[lang === "id" ? 0 : 1]}</p></div><span className="step-mark" aria-hidden="true">↗︎</span></article>)}</div>
       <p className="process-aside">{copy(lang, "ESTIMASI PENGERJAAN · 7–14 HARI KERJA", "ESTIMATED DELIVERY · 7–14 WORKING DAYS")}</p>
     </section>
   );
@@ -325,7 +325,7 @@ const faqContent = [
 function FAQ({ lang }: { lang: Lang }) {
   return (
     <section className="faq-section editorial-wrap" id="faq">
-      <div className="faq-intro reveal"><span className="section-index">04 / A FEW GOOD QUESTIONS</span><h2>{lang === "id" ? <>Yang sering<br /><em>ditanyain.</em></> : <>A few things<br /><em>to know.</em></>}</h2><a href={whatsappLink(copy(lang, "Hai GwenMade, aku mau tanya-tanya dulu.", "Hi GwenMade, I have a quick question."))} target="_blank" rel="noreferrer">{copy(lang, "Tanya langsung", "Ask us anything")} ↗</a></div>
+      <div className="faq-intro reveal"><span className="section-index">04 / A FEW GOOD QUESTIONS</span><h2>{lang === "id" ? <>Yang sering<br /><em>ditanyain.</em></> : <>A few things<br /><em>to know.</em></>}</h2><a href={whatsappLink(copy(lang, "Hai GwenMade, aku mau tanya-tanya dulu.", "Hi GwenMade, I have a quick question."))} target="_blank" rel="noreferrer">{copy(lang, "Tanya langsung", "Ask us anything")} ↗︎</a></div>
       <div className="faq-list">{faqContent.map((faq, index) => <details className="faq-item reveal" key={faq.q[0]}><summary><span className="faq-index">0{index + 1}</span><span>{faq.q[lang === "id" ? 0 : 1]}</span><span className="faq-plus" aria-hidden="true">+</span></summary><p>{faq.a[lang === "id" ? 0 : 1]}</p></details>)}</div>
     </section>
   );
@@ -341,11 +341,11 @@ function Footer({ lang }: { lang: Lang }) {
             <a className="wordmark footer-wordmark" href="#home" aria-label="GwenMade home"><span className="wordmark-mark">G</span><span className="wordmark-name">GwenMade</span></a>
             <h2>{lang === "id" ? <>Ada ide?<br /><em>Yuk wujudin.</em></> : <>Have an idea?<br /><em>Let’s make it real.</em></>}</h2>
             <p>{copy(lang, "Ceritain sedikit soal brand-mu. Kita cari bentuk yang paling pas, bareng-bareng.", "Tell us a little about your brand. We’ll find the right way to bring it to life.")}</p>
-            <a className="button button-primary footer-cta" href={whatsappLink(copy(lang, "Hai GwenMade, aku mau mulai ngobrolin landing page buat brand-ku.", "Hi GwenMade, I’d like to talk about a landing page for my brand."))} target="_blank" rel="noreferrer">{copy(lang, "Mulai ngobrol", "Start a conversation")} <span>↗</span></a>
+            <a className="button button-primary footer-cta" href={whatsappLink(copy(lang, "Hai GwenMade, aku mau mulai ngobrolin landing page buat brand-ku.", "Hi GwenMade, I’d like to talk about a landing page for my brand."))} target="_blank" rel="noreferrer">{copy(lang, "Mulai ngobrol", "Start a conversation")} <span>↗︎</span></a>
           </div>
           <div className="footer-links">
             <div><span>{copy(lang, "JELAJAHI", "EXPLORE")}</span><a href="#services">{copy(lang, "Layanan", "Services")}</a><a href="#pricing">{copy(lang, "Harga", "Pricing")}</a><a href="#process">{copy(lang, "Proses", "Process")}</a><a href="#faq">FAQ</a></div>
-            <div><span>{copy(lang, "SAPA KAMI", "SAY HELLO")}</span><a href={contacts[0].href} target="_blank" rel="noreferrer">{contacts[0].value} ↗</a><a href={contacts[1].href} target="_blank" rel="noreferrer">{contacts[1].value} ↗</a><a href={contacts[2].href} target="_blank" rel="noreferrer">{contacts[2].value} ↗</a></div>
+            <div><span>{copy(lang, "SAPA KAMI", "SAY HELLO")}</span><a href={contacts[0].href} target="_blank" rel="noreferrer">{contacts[0].value} ↗︎</a><a href={contacts[1].href} target="_blank" rel="noreferrer">{contacts[1].value} ↗︎</a><a href={contacts[2].href} target="_blank" rel="noreferrer">{contacts[2].value} ↗︎</a></div>
           </div>
         </div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} GWENMADE STUDIO</span><a href="https://gwenmade.site">GWENMADE.SITE</a><span>{copy(lang, "DIBUAT DENGAN PENUH PERHATIAN", "MADE WITH CARE")}</span></div>
