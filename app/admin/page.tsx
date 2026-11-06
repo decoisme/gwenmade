@@ -264,7 +264,7 @@ export default function AdminPage() {
   }
 
   if (!isSupabaseConfigured) {
-    return <AdminNotice title="Connect Supabase to use the CMS" text="Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your local environment, then run supabase/setup.sql in the Supabase SQL Editor." />;
+    return <AdminNotice title="Connect Supabase to use the CMS" text="Add NEXT_PUBLIC_SUPABASE_URL and either NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart the dev server. Run supabase/setup.sql in the Supabase SQL Editor." />;
   }
 
   if (loading) return <AdminNotice title="Opening your studio" text="Checking your secure admin session…" />;

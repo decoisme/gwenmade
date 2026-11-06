@@ -1,7 +1,7 @@
 import { defaultSiteContent, type PortfolioProject, type SiteContent } from "@/app/site-content";
 
 const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const sessionStorageKey = "gwenmade-supabase-session";
 
 export const isSupabaseConfigured = Boolean(projectUrl && anonKey);
