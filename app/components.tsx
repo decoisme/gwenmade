@@ -188,6 +188,38 @@ function Services({ lang, content }: { lang: Lang; content: SiteContent["service
 
 const packages = defaultSiteContent.pricing.packages;
 
+function WorkDescription({ text, lang }: { text: string; lang: Lang }) {
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    const element = descriptionRef.current;
+    if (!element) return;
+
+    const measure = () => {
+      const fullText = element.cloneNode(true) as HTMLParagraphElement;
+      fullText.classList.remove("is-expanded");
+      fullText.classList.add("work-description-measure");
+      fullText.style.width = `${element.clientWidth}px`;
+      document.body.appendChild(fullText);
+      const lineHeight = Number.parseFloat(getComputedStyle(element).lineHeight) || 24;
+      setHasMore(fullText.scrollHeight > lineHeight * 3 + 2);
+      fullText.remove();
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [text]);
+
+  return <>
+    <p ref={descriptionRef} className={`work-description ${expanded ? "is-expanded" : ""}`}>{text}</p>
+    {hasMore && <button className="work-more" type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>{expanded ? copy(lang, "Lihat lebih sedikit", "View less") : copy(lang, "Lihat selengkapnya", "View more")}</button>}
+  </>;
+}
+
 function Works({ lang, content, projects }: { lang: Lang; content: SiteContent["works"]; projects: PortfolioProject[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -219,7 +251,7 @@ function Works({ lang, content, projects }: { lang: Lang; content: SiteContent["
               <div className="work-details">
                 <div><span>{lang === "id" ? project.category_id : project.category_en}</span><span>{project.client}</span></div>
                 <h3>{lang === "id" ? project.title_id : project.title_en}</h3>
-                <p>{lang === "id" ? project.description_id : project.description_en}</p>
+                <WorkDescription text={lang === "id" ? project.description_id : project.description_en} lang={lang} />
                 {project.project_url && <a href={project.project_url} target="_blank" rel="noreferrer">{copy(lang, "Lihat proyek", "Visit project")} <span>↗︎</span></a>}
               </div>
             </article>
