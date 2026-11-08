@@ -408,9 +408,16 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 
 /* Portfolio */
 .works-section { padding-top: 140px; padding-bottom: 150px; }
-.works-section .section-heading { margin-bottom: 64px; }
-.works-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 72px 34px; align-items: start; }
-.work-card-offset { margin-top: 110px; }
+.works-section .section-heading { margin-bottom: 48px; }
+.works-rail-controls { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; color: var(--muted); font: 9px/1.5 var(--mono); letter-spacing: .045em; }
+.works-rail-controls > div { display: flex; gap: 7px; }
+.works-rail-controls button { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid var(--rule-strong); background: transparent; color: var(--ink); cursor: pointer; transition: color .2s ease, border-color .2s ease, background-color .2s ease; }
+.works-rail-controls button:hover { border-color: var(--accent); background: var(--white); color: var(--accent); }
+.works-track { display: flex; gap: 34px; min-width: 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 17px; overscroll-behavior-x: contain; scroll-behavior: smooth; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-color: var(--rule-strong) transparent; scrollbar-width: thin; }
+.works-track::-webkit-scrollbar { height: 5px; }
+.works-track::-webkit-scrollbar-track { background: transparent; }
+.works-track::-webkit-scrollbar-thumb { background: var(--rule-strong); }
+.work-card { flex: 0 0 clamp(360px, 54vw, 720px); min-width: 0; scroll-snap-align: start; }
 .work-image { position: relative; display: block; aspect-ratio: 1.42; overflow: hidden; background: var(--paper-deep); }
 .work-image img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2,.7,.2,1); }
 .work-card:hover .work-image img { transform: scale(1.035); }
@@ -532,14 +539,14 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 
 @media (max-width: 900px) {
   .works-section { padding-top: 105px; padding-bottom: 110px; }
-  .works-grid { gap: 54px 20px; }
-  .work-card-offset { margin-top: 75px; }
+  .works-track { gap: 22px; }
+  .work-card { flex-basis: clamp(320px, 64vw, 650px); }
 }
 @media (max-width: 720px) {
   .works-section { padding-top: 92px; padding-bottom: 100px; }
-  .works-section .section-heading { margin-bottom: 35px; }
-  .works-grid { grid-template-columns: 1fr; gap: 38px; }
-  .work-card-offset { margin-top: 0; }
+  .works-section .section-heading { margin-bottom: 32px; }
+  .works-track { gap: 14px; padding-bottom: 13px; }
+  .work-card { flex-basis: 86%; }
   .work-details h3 { font-size: 30px; }
   .work-details > div { font-size: 8px; }
   .admin-topbar { min-height: 64px; padding-inline: 16px; }

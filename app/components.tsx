@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { Check, Minus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Minus } from "lucide-react";
 import { Flip } from "gsap/Flip";
 import { gsap } from "gsap";
 import Image from "next/image";
@@ -189,6 +189,17 @@ function Services({ lang, content }: { lang: Lang; content: SiteContent["service
 const packages = defaultSiteContent.pricing.packages;
 
 function Works({ lang, content, projects }: { lang: Lang; content: SiteContent["works"]; projects: PortfolioProject[] }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  function scrollProjects(direction: -1 | 1) {
+    const track = trackRef.current;
+    if (!track) return;
+    track.scrollBy({
+      left: direction * track.clientWidth * .82,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+  }
+
   return (
     <section className="works-section editorial-wrap" id="works">
       <div className="section-heading reveal">
@@ -196,9 +207,11 @@ function Works({ lang, content, projects }: { lang: Lang; content: SiteContent["
         <p>{content.description[lang]}</p>
       </div>
       {projects.length ? (
-        <div className="works-grid">
+        <>
+          {projects.length > 1 && <div className="works-rail-controls"><span>{copy(lang, "GESER UNTUK LIHAT SEMUA KARYA", "SCROLL TO EXPLORE ALL WORK")}</span><div><button type="button" aria-label={copy(lang, "Karya sebelumnya", "Previous projects")} onClick={() => scrollProjects(-1)}><ArrowLeft size={17} aria-hidden="true" /></button><button type="button" aria-label={copy(lang, "Karya berikutnya", "Next projects")} onClick={() => scrollProjects(1)}><ArrowRight size={17} aria-hidden="true" /></button></div></div>}
+          <div className="works-track" ref={trackRef} role="region" tabIndex={0} aria-label={copy(lang, "Galeri karya GwenMade, dapat digeser mendatar", "GwenMade project gallery, horizontally scrollable")}>
           {projects.map((project, index) => (
-            <article className={`work-card reveal work-card-${index % 2 ? "offset" : "standard"}`} key={project.id}>
+            <article className="work-card reveal" key={project.id}>
               <div className="work-image">
                 {project.cover_image ? <Image src={project.cover_image} alt={lang === "id" ? project.title_id : project.title_en} width={1600} height={1100} unoptimized loading="lazy" /> : <div className="work-image-empty"><span>{project.client || "GWENMADE"}</span><strong>{project.title_id}</strong></div>}
                 <span className="work-image-index">{String(index + 1).padStart(2, "0")} / {project.year}</span>
@@ -211,7 +224,8 @@ function Works({ lang, content, projects }: { lang: Lang; content: SiteContent["
               </div>
             </article>
           ))}
-        </div>
+          </div>
+        </>
       ) : <p className="works-empty">{copy(lang, "Karya terbaru akan segera hadir di sini.", "Selected projects will appear here soon.")}</p>}
     </section>
   );
