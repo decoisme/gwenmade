@@ -88,6 +88,15 @@ export type PortfolioProject = {
   published: boolean;
 };
 
+export type ClientLogo = {
+  id: string;
+  name: string;
+  logo_url: string;
+  website_url: string;
+  sort_order: number;
+  published: boolean;
+};
+
 export const defaultSiteContent: SiteContent = {
   hero: {
     topline: { id: "STUDIO DIGITAL INDEPENDEN · INDONESIA", en: "INDEPENDENT DIGITAL STUDIO · INDONESIA" },

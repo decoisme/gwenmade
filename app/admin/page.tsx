@@ -4,23 +4,28 @@ import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "
 import Image from "next/image";
 import Link from "next/link";
 import { Check, ImagePlus, LoaderCircle, LogOut, Plus, Save, Trash2, X } from "lucide-react";
-import { defaultSiteContent, type PortfolioProject, type SiteContent } from "@/app/site-content";
+import { defaultSiteContent, type ClientLogo, type PortfolioProject, type SiteContent } from "@/app/site-content";
 import {
+  deleteClientLogo,
   deleteProject,
   getAdminSession,
   isSupabaseConfigured,
+  loadAdminClientLogos,
   loadAdminContent,
   loadAdminProjects,
   saveAdminContent,
+  saveClientLogo,
   saveProject,
   signInAdmin,
   signOutAdmin,
+  uploadClientLogo,
   uploadProjectImage,
   verifyCmsAdmin,
+  type ClientLogoDraft,
   type ProjectDraft,
 } from "@/lib/supabase";
 
-type DashboardTab = "works" | "content";
+type DashboardTab = "works" | "clients" | "content";
 type ContentSection = keyof SiteContent;
 
 const contentSections: ContentSection[] = ["hero", "services", "works", "pricing", "process", "faq", "footer"];
@@ -33,6 +38,101 @@ const sectionNames: Record<ContentSection, string> = {
   faq: "FAQ",
   footer: "Footer",
 };
+
+function emptyClientLogo(): ClientLogoDraft {
+  return { name: "", logo_url: "", website_url: "", sort_order: 0, published: true };
+}
+
+async function removeFlatLogoBackground(file: File): Promise<File> {
+  const bitmap = await createImageBitmap(file);
+  try {
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("Could not prepare the logo image for background removal.");
+    context.drawImage(bitmap, 0, 0, width, height);
+
+    const image = context.getImageData(0, 0, width, height);
+    const { data } = image;
+    const cornerPoints = [
+      [0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1],
+    ];
+    const corners = cornerPoints.map(([x, y]) => {
+      const offset = (y * width + x) * 4;
+      return { r: data[offset], g: data[offset + 1], b: data[offset + 2], a: data[offset + 3] };
+    }).filter((color) => color.a > 200);
+    if (corners.length < 2) throw new Error("Background removal needs a solid background visible in at least two image corners.");
+
+    const distance = (color: { r: number; g: number; b: number }, background: { r: number; g: number; b: number }) =>
+      Math.hypot(color.r - background.r, color.g - background.g, color.b - background.b);
+    const cluster = corners.map((candidate) => corners.filter((color) => distance(color, candidate) <= 70))
+      .sort((left, right) => right.length - left.length)[0];
+    if (cluster.length < 2) throw new Error("The logo corners do not share a consistent background color.");
+    const background = cluster.reduce((average, color) => ({
+      r: average.r + color.r / cluster.length,
+      g: average.g + color.g / cluster.length,
+      b: average.b + color.b / cluster.length,
+    }), { r: 0, g: 0, b: 0 });
+
+    const pixelCount = width * height;
+    const removed = new Uint8Array(pixelCount);
+    const queue = new Int32Array(pixelCount);
+    let queueEnd = 0;
+    const matchesBackground = (index: number) => {
+      const offset = index * 4;
+      return data[offset + 3] > 20 && distance(
+        { r: data[offset], g: data[offset + 1], b: data[offset + 2] },
+        background,
+      ) <= 68;
+    };
+    const addPixel = (index: number) => {
+      if (removed[index] || !matchesBackground(index)) return;
+      removed[index] = 1;
+      queue[queueEnd++] = index;
+    };
+
+    for (let x = 0; x < width; x += 1) {
+      addPixel(x);
+      addPixel((height - 1) * width + x);
+    }
+    for (let y = 0; y < height; y += 1) {
+      addPixel(y * width);
+      addPixel(y * width + width - 1);
+    }
+    for (let cursor = 0; cursor < queueEnd; cursor += 1) {
+      const index = queue[cursor];
+      const x = index % width;
+      const y = Math.floor(index / width);
+      if (x > 0) addPixel(index - 1);
+      if (x < width - 1) addPixel(index + 1);
+      if (y > 0) addPixel(index - width);
+      if (y < height - 1) addPixel(index + width);
+    }
+    for (let index = 0; index < pixelCount; index += 1) {
+      if (!removed[index]) continue;
+      const offset = index * 4;
+      data[offset] = 0;
+      data[offset + 1] = 0;
+      data[offset + 2] = 0;
+      data[offset + 3] = 0;
+    }
+    context.putImageData(image, 0, 0);
+
+    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((result) => {
+      if (result) resolve(result);
+      else reject(new Error("Could not create a transparent PNG from this logo."));
+    }, "image/png"));
+    if (blob.size > 5 * 1024 * 1024) throw new Error("The transparent logo is larger than 5 MB. Please upload a smaller image.");
+    const filename = file.name.replace(/\.[^.]+$/, "") || "client-logo";
+    return new File([blob], `${filename}-transparent.png`, { type: "image/png" });
+  } finally {
+    bitmap.close();
+  }
+}
 
 function emptyProject(): ProjectDraft {
   return {
@@ -134,11 +234,15 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [content, setContent] = useState<SiteContent>(defaultSiteContent);
   const [projects, setProjects] = useState<PortfolioProject[]>([]);
+  const [clientLogos, setClientLogos] = useState<ClientLogo[]>([]);
   const [project, setProject] = useState<ProjectDraft | null>(null);
+  const [clientLogo, setClientLogo] = useState<ClientLogoDraft | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [removeLogoBackground, setRemoveLogoBackground] = useState(false);
 
   const publishedCount = useMemo(() => projects.filter((item) => item.published).length, [projects]);
 
@@ -149,9 +253,10 @@ export default function AdminPage() {
       setLoading(false);
       return false;
     }
-    const [savedContent, savedProjects] = await Promise.all([loadAdminContent(), loadAdminProjects()]);
+    const [savedContent, savedProjects, savedClientLogos] = await Promise.all([loadAdminContent(), loadAdminProjects(), loadAdminClientLogos()]);
     setContent(savedContent);
     setProjects(savedProjects);
+    setClientLogos(savedClientLogos);
     setAuthorized(true);
     setLoading(false);
     return true;
@@ -256,10 +361,61 @@ export default function AdminPage() {
     }
   }
 
+  async function handleSaveClientLogo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!clientLogo) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await saveClientLogo({ ...clientLogo, name: clientLogo.name.trim(), logo_url: clientLogo.logo_url.trim(), website_url: clientLogo.website_url.trim() });
+      setClientLogos(await loadAdminClientLogos());
+      setClientLogo(null);
+      setMessage("Client logo saved.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not save client logo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleClientLogoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !clientLogo) return;
+    setUploadingLogo(true);
+    setError("");
+    try {
+      const uploadFile = removeLogoBackground ? await removeFlatLogoBackground(file) : file;
+      const url = await uploadClientLogo(uploadFile);
+      setClientLogo((current) => current ? { ...current, logo_url: url } : current);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Logo upload failed.");
+    } finally {
+      setUploadingLogo(false);
+      event.target.value = "";
+    }
+  }
+
+  async function handleDeleteClientLogo(id: string, name: string) {
+    if (!window.confirm(`Delete the ${name} client logo? This cannot be undone.`)) return;
+    setBusy(true);
+    setError("");
+    try {
+      await deleteClientLogo(id);
+      setClientLogos(await loadAdminClientLogos());
+      setMessage("Client logo deleted.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not delete client logo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSignOut() {
     await signOutAdmin();
     setAuthorized(false);
     setProjects([]);
+    setClientLogos([]);
     setMessage("");
   }
 
@@ -293,13 +449,15 @@ export default function AdminPage() {
       <aside className="admin-sidebar">
         <span className="admin-eyebrow">PUBLISHING</span>
         <button type="button" className={tab === "works" ? "active" : ""} onClick={() => { setTab("works"); setMessage(""); setError(""); }}>Portfolio <span>{projects.length}</span></button>
+        <button type="button" className={tab === "clients" ? "active" : ""} onClick={() => { setTab("clients"); setMessage(""); setError(""); }}>Client logos <span>{clientLogos.length}</span></button>
         <button type="button" className={tab === "content" ? "active" : ""} onClick={() => { setTab("content"); setMessage(""); setError(""); }}>Site content</button>
         <div className="admin-sidebar-note"><strong>{publishedCount} live works</strong><span>Only published projects appear on the public site.</span></div>
       </aside>
       <section className="admin-main-panel">
         <div className="admin-page-heading">
-          <div><span className="admin-eyebrow">{tab === "works" ? "PORTFOLIO MANAGER" : "CONTENT MANAGER"}</span><h1>{tab === "works" ? "Your work, out in the world." : "Shape the whole story."}</h1><p>{tab === "works" ? "Add projects, upload images, and choose what visitors can see." : "Edit bilingual page copy, service details, package data, process steps, and FAQs."}</p></div>
+          <div><span className="admin-eyebrow">{tab === "works" ? "PORTFOLIO MANAGER" : tab === "clients" ? "CLIENT LOGOS" : "CONTENT MANAGER"}</span><h1>{tab === "works" ? "Your work, out in the world." : tab === "clients" ? "The brands behind the work." : "Shape the whole story."}</h1><p>{tab === "works" ? "Add projects, upload images, and choose what visitors can see." : tab === "clients" ? "Manage logo images, website links, order, and visibility in the moving client strip." : "Edit bilingual page copy, service details, package data, process steps, and FAQs."}</p></div>
           {tab === "works" && !project && <button type="button" className="admin-primary-button" onClick={() => { setProject(emptyProject()); setMessage(""); setError(""); }}><Plus size={16} /> Add a project</button>}
+          {tab === "clients" && !clientLogo && <button type="button" className="admin-primary-button" onClick={() => { setClientLogo(emptyClientLogo()); setMessage(""); setError(""); }}><Plus size={16} /> Add a client logo</button>}
           {tab === "content" && <button type="button" className="admin-primary-button" disabled={busy} onClick={handleSaveContent}>{busy ? <LoaderCircle className="spin" size={16} /> : <Save size={16} />} Save all content</button>}
         </div>
         {message && <p className="admin-message admin-success" role="status"><Check size={15} />{message}</p>}
@@ -332,6 +490,27 @@ export default function AdminPage() {
         ) : projects.length ? (
           <div className="project-list">{projects.map((item) => <ProjectRow key={item.id} project={item} onEdit={() => { setProject({ ...item }); setMessage(""); setError(""); }} onDelete={() => handleDeleteProject(item.id)} />)}</div>
         ) : <div className="admin-empty-state"><ImagePlus size={28} /><h2>Your work starts here.</h2><p>Add your first project to give visitors a look at what GwenMade can make.</p><button type="button" className="admin-primary-button" onClick={() => setProject(emptyProject())}><Plus size={16} /> Add a project</button></div>
+        ) : tab === "clients" ? (clientLogo ? (
+          <form className="project-editor" onSubmit={handleSaveClientLogo}>
+            <div className="project-editor-heading"><div><span className="admin-eyebrow">{clientLogo.id ? "EDIT CLIENT LOGO" : "NEW CLIENT LOGO"}</span><h2>{clientLogo.name || "Add a client logo"}</h2></div><button type="button" className="admin-quiet-button" onClick={() => setClientLogo(null)}><X size={16} /> Close</button></div>
+            <div className="project-form-grid">
+              <label className="cms-field"><span>Client / brand name</span><input required value={clientLogo.name} onChange={(event) => setClientLogo({ ...clientLogo, name: event.target.value })} /></label>
+              <label className="cms-field"><span>Logo image URL</span><input required type="url" value={clientLogo.logo_url} onChange={(event) => setClientLogo({ ...clientLogo, logo_url: event.target.value })} placeholder="https://…" /></label>
+              <label className="cms-field"><span>Website URL</span><input type="url" value={clientLogo.website_url} onChange={(event) => setClientLogo({ ...clientLogo, website_url: event.target.value })} placeholder="https://…" /></label>
+              <label className="cms-field"><span>Display order</span><input type="number" value={clientLogo.sort_order} onChange={(event) => setClientLogo({ ...clientLogo, sort_order: Number(event.target.value) })} /></label>
+            </div>
+            <div className="project-image-upload client-logo-upload">
+              {clientLogo.logo_url ? <Image src={clientLogo.logo_url} alt={`${clientLogo.name || "Client"} logo preview`} width={240} height={120} unoptimized /> : <div className="project-image-placeholder"><ImagePlus size={22} /><span>Logo preview appears here</span></div>}
+              <label className="admin-secondary-button"><ImagePlus size={15} />{uploadingLogo ? (removeLogoBackground ? "Removing background…" : "Uploading logo…") : "Upload logo image"}<input type="file" accept="image/png,image/jpeg,image/webp,image/avif" onChange={handleClientLogoUpload} disabled={uploadingLogo} /></label>
+              <small>Use a PNG, WebP, or AVIF image. Max 5 MB.</small>
+              <label className="logo-background-option"><input type="checkbox" checked={removeLogoBackground} onChange={(event) => setRemoveLogoBackground(event.target.checked)} /><span><strong>Remove solid background</strong><small>Removes a uniform edge-connected background and uploads a transparent PNG. Best for plain backgrounds.</small></span></label>
+            </div>
+            <label className="publish-toggle"><input type="checkbox" checked={clientLogo.published} onChange={(event) => setClientLogo({ ...clientLogo, published: event.target.checked })} /><span><strong>Publish this logo</strong><small>Published logos appear in the moving client strip.</small></span></label>
+            <div className="project-editor-actions"><button type="button" className="admin-quiet-button" onClick={() => setClientLogo(null)}>Cancel</button><button type="submit" className="admin-primary-button" disabled={busy || uploadingLogo}>{busy ? <LoaderCircle className="spin" size={16} /> : <Save size={16} />} Save logo</button></div>
+          </form>
+        ) : clientLogos.length ? (
+          <div className="project-list">{clientLogos.map((logo) => <ClientLogoRow key={logo.id} logo={logo} onEdit={() => { setClientLogo({ ...logo }); setMessage(""); setError(""); }} onDelete={() => handleDeleteClientLogo(logo.id, logo.name)} />)}</div>
+        ) : <div className="admin-empty-state"><ImagePlus size={28} /><h2>No client logos yet.</h2><p>Add a logo image and link to show clients in the scrolling strip on your homepage.</p><button type="button" className="admin-primary-button" onClick={() => setClientLogo(emptyClientLogo())}><Plus size={16} /> Add a client logo</button></div>
         ) : (
           <div className="content-editor">
             <div className="content-editor-tip"><strong>Editing guide</strong><span>Each section contains Indonesian and English fields. Clear the tracking or business email values in a plan to show those items muted as not included.</span></div>
@@ -346,6 +525,14 @@ export default function AdminPage() {
       </section>
     </div>
   </main>;
+}
+
+function ClientLogoRow({ logo, onEdit, onDelete }: { logo: ClientLogo; onEdit: () => void; onDelete: () => void }) {
+  return <article className="project-list-row client-logo-list-row">
+    {logo.logo_url ? <Image src={logo.logo_url} alt="" width={240} height={120} unoptimized /> : <div className="project-list-placeholder"><ImagePlus size={20} /></div>}
+    <div className="project-list-copy"><span className={logo.published ? "project-status is-live" : "project-status"}>{logo.published ? "PUBLISHED" : "DRAFT"}</span><h2>{logo.name}</h2><p>{logo.website_url || "No website link"}</p></div>
+    <div className="project-list-actions"><button type="button" className="admin-quiet-button" onClick={onEdit}>Edit</button><button type="button" className="admin-icon-button" aria-label={`Delete ${logo.name} client logo`} onClick={onDelete}><Trash2 size={16} /></button></div>
+  </article>;
 }
 
 function ProjectRow({ project, onEdit, onDelete }: { project: PortfolioProject; onEdit: () => void; onDelete: () => void }) {

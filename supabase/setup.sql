@@ -30,6 +30,27 @@ create table if not exists public.portfolio_projects (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.client_logos (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  logo_url text not null default '',
+  website_url text not null default '',
+  sort_order integer not null default 0,
+  published boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+insert into public.client_logos (name, logo_url, website_url, sort_order, published) values
+  ('Tinker Air Force Base', 'https://dralqqfeqmhgrkjuebhd.supabase.co/storage/v1/object/public/client-logos/af-logo-seal.png', 'https://www.tinker.af.mil/', 10, true),
+  ('Astra', 'https://dralqqfeqmhgrkjuebhd.supabase.co/storage/v1/object/public/client-logos/Astra.png', 'https://www.astra.co.id/', 20, true),
+  ('Akebono Astra', 'https://dralqqfeqmhgrkjuebhd.supabase.co/storage/v1/object/public/client-logos/Akebono.png', 'https://www.akebono-astra.co.id/', 30, true),
+  ('Merdeka Studio', 'https://dralqqfeqmhgrkjuebhd.supabase.co/storage/v1/object/public/client-logos/MerdekaStudio.png', 'https://merdekastudio.id/', 40, true),
+  ('Banking Better', 'https://dralqqfeqmhgrkjuebhd.supabase.co/storage/v1/object/public/client-logos/BankingBetter.png', 'https://bankingbetter.id/', 50, true),
+  ('IDESSS', 'https://dralqqfeqmhgrkjuebhd.supabase.co/storage/v1/object/public/client-logos/IDESSS.png', 'https://www.instagram.com/idesssid/', 60, true),
+  ('Amertarva', 'https://dralqqfeqmhgrkjuebhd.supabase.co/storage/v1/object/public/client-logos/Amertarva.png', 'https://learning-amertarva.vercel.app/', 70, true)
+on conflict (name) do nothing;
+
 create or replace function public.is_gwenmade_cms_admin()
 returns boolean
 language sql
@@ -51,11 +72,14 @@ grant select on public.site_content to anon, authenticated;
 grant insert, update, delete on public.site_content to authenticated;
 grant select on public.portfolio_projects to anon, authenticated;
 grant insert, update, delete on public.portfolio_projects to authenticated;
+grant select on public.client_logos to anon, authenticated;
+grant insert, update, delete on public.client_logos to authenticated;
 grant select on public.cms_admins to authenticated;
 
 alter table public.cms_admins enable row level security;
 alter table public.site_content enable row level security;
 alter table public.portfolio_projects enable row level security;
+alter table public.client_logos enable row level security;
 
 drop policy if exists "CMS admins can read their own allowlist entry" on public.cms_admins;
 create policy "CMS admins can read their own allowlist entry"
@@ -102,6 +126,28 @@ create policy "CMS admins can delete projects"
   on public.portfolio_projects for delete to authenticated
   using (public.is_gwenmade_cms_admin());
 
+drop policy if exists "Public can read published client logos" on public.client_logos;
+create policy "Public can read published client logos"
+  on public.client_logos for select to anon, authenticated
+  using (published = true);
+drop policy if exists "CMS admins can read all client logos" on public.client_logos;
+create policy "CMS admins can read all client logos"
+  on public.client_logos for select to authenticated
+  using (public.is_gwenmade_cms_admin());
+drop policy if exists "CMS admins can insert client logos" on public.client_logos;
+create policy "CMS admins can insert client logos"
+  on public.client_logos for insert to authenticated
+  with check (public.is_gwenmade_cms_admin());
+drop policy if exists "CMS admins can update client logos" on public.client_logos;
+create policy "CMS admins can update client logos"
+  on public.client_logos for update to authenticated
+  using (public.is_gwenmade_cms_admin())
+  with check (public.is_gwenmade_cms_admin());
+drop policy if exists "CMS admins can delete client logos" on public.client_logos;
+create policy "CMS admins can delete client logos"
+  on public.client_logos for delete to authenticated
+  using (public.is_gwenmade_cms_admin());
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('portfolio-images', 'portfolio-images', true, 10485760, array['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
 on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
@@ -123,6 +169,28 @@ drop policy if exists "CMS admins can delete portfolio images" on storage.object
 create policy "CMS admins can delete portfolio images"
   on storage.objects for delete to authenticated
   using (bucket_id = 'portfolio-images' and public.is_gwenmade_cms_admin());
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('client-logos', 'client-logos', true, 5242880, array['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
+on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Public can view client logos" on storage.objects;
+create policy "Public can view client logos"
+  on storage.objects for select to anon, authenticated
+  using (bucket_id = 'client-logos');
+drop policy if exists "CMS admins can upload client logos" on storage.objects;
+create policy "CMS admins can upload client logos"
+  on storage.objects for insert to authenticated
+  with check (bucket_id = 'client-logos' and public.is_gwenmade_cms_admin());
+drop policy if exists "CMS admins can update client logos" on storage.objects;
+create policy "CMS admins can update client logos"
+  on storage.objects for update to authenticated
+  using (bucket_id = 'client-logos' and public.is_gwenmade_cms_admin())
+  with check (bucket_id = 'client-logos' and public.is_gwenmade_cms_admin());
+drop policy if exists "CMS admins can delete client logos" on storage.objects;
+create policy "CMS admins can delete client logos"
+  on storage.objects for delete to authenticated
+  using (bucket_id = 'client-logos' and public.is_gwenmade_cms_admin());
 
 -- After creating your user in Supabase Authentication, add that same email here:
 -- insert into public.cms_admins (email) values (lower('you@example.com'));

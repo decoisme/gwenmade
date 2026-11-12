@@ -1,4 +1,4 @@
-import { defaultSiteContent, type PortfolioProject, type SiteContent } from "@/app/site-content";
+import { defaultSiteContent, type ClientLogo, type PortfolioProject, type SiteContent } from "@/app/site-content";
 
 const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -45,6 +45,18 @@ export async function getPublicSiteContent(): Promise<SiteContent> {
   } catch (error) {
     console.error("Could not load GwenMade site content from Supabase.", error);
     return defaultSiteContent;
+  }
+}
+
+export async function getPublishedClientLogos(): Promise<ClientLogo[]> {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const query = "?select=id,name,logo_url,website_url,sort_order,published&published=eq.true&order=sort_order.asc,created_at.asc";
+    const response = await fetch(endpoint(`/rest/v1/client_logos${query}`), { headers: publicHeaders(), cache: "no-store" });
+    return await safeJson<ClientLogo[]>(response);
+  } catch (error) {
+    console.error("Could not load GwenMade client logos from Supabase.", error);
+    return [];
   }
 }
 
@@ -156,6 +168,47 @@ export async function saveAdminContent(content: SiteContent) {
 
 export async function loadAdminProjects() {
   return adminRequest<PortfolioProject[]>("/rest/v1/portfolio_projects?select=id,title_id,title_en,description_id,description_en,category_id,category_en,client,year,cover_image,project_url,sort_order,published&order=sort_order.asc,created_at.desc");
+}
+
+export async function loadAdminClientLogos() {
+  return adminRequest<ClientLogo[]>("/rest/v1/client_logos?select=id,name,logo_url,website_url,sort_order,published&order=sort_order.asc,created_at.asc");
+}
+
+export type ClientLogoDraft = Omit<ClientLogo, "id"> & { id?: string };
+
+export async function saveClientLogo(logo: ClientLogoDraft) {
+  if (logo.id) {
+    const { id, ...values } = logo;
+    return adminRequest<ClientLogo[]>(`/rest/v1/client_logos?id=eq.${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ ...values, updated_at: new Date().toISOString() }),
+    });
+  }
+  const { id: _id, ...values } = logo;
+  return adminRequest<ClientLogo[]>("/rest/v1/client_logos", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify(values),
+  });
+}
+
+export async function deleteClientLogo(id: string) {
+  await adminRequest<unknown>(`/rest/v1/client_logos?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function uploadClientLogo(file: File) {
+  const session = await getAdminSession();
+  if (!session) throw new Error("Your admin session has expired. Please sign in again.");
+  const safeName = file.name.normalize("NFKD").replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").toLowerCase();
+  const path = `${crypto.randomUUID()}-${safeName}`;
+  const response = await fetch(endpoint(`/storage/v1/object/client-logos/${path}`), {
+    method: "POST",
+    headers: { ...publicHeaders(), Authorization: `Bearer ${session.access_token}`, "Content-Type": file.type, "x-upsert": "false" },
+    body: file,
+  });
+  await safeJson(response);
+  return `${projectUrl}/storage/v1/object/public/client-logos/${path}`;
 }
 
 export type ProjectDraft = Omit<PortfolioProject, "id"> & { id?: string };

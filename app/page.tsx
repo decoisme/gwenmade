@@ -1,16 +1,16 @@
 import { EditorialSite } from "./components";
 import { RevealMotion } from "./reveal";
-import { getPublicSiteContent, getPublishedProjects } from "@/lib/supabase";
+import { getPublicSiteContent, getPublishedClientLogos, getPublishedProjects } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [content, projects] = await Promise.all([getPublicSiteContent(), getPublishedProjects()]);
+  const [content, projects, clientLogos] = await Promise.all([getPublicSiteContent(), getPublishedProjects(), getPublishedClientLogos()]);
 
   return (
     <>
       <RevealMotion />
-      <EditorialSite content={content} projects={projects} />
+      <EditorialSite content={content} projects={projects} clientLogos={clientLogos} />
     </>
   );
 }

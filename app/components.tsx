@@ -1,18 +1,20 @@
 "use client";
 
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { ArrowLeft, ArrowRight, Check, Minus } from "lucide-react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { ArrowLeft, ArrowRight, Check, Minus, X } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Flip } from "gsap/Flip";
 import { gsap } from "gsap";
 import Image from "next/image";
 import { BrandMark } from "@/app/brand-mark";
-import { defaultSiteContent, type Lang, type PortfolioProject, type SiteContent } from "@/app/site-content";
+import { defaultSiteContent, type ClientLogo, type Lang, type PortfolioProject, type SiteContent } from "@/app/site-content";
 
 const contacts = [
   { label: "WhatsApp 01", value: "+62 815-3322-7007", href: "https://wa.me/6281533227007" },
   { label: "WhatsApp 02", value: "+62 822-5822-1745", href: "https://wa.me/6282258221745" },
   { label: "Instagram", value: "@nadeqo", href: "https://instagram.com/nadeqo" },
 ];
+
 
 function copy(lang: Lang, id: string, en: string) {
   return lang === "id" ? id : en;
@@ -28,7 +30,7 @@ function DisplayLines({ lines }: { lines: string[] }) {
   return <>{lines.slice(0, -1).map((line, index) => <Fragment key={`${line}-${index}`}>{line}<br /></Fragment>)}<em>{lines.at(-1)}</em></>;
 }
 
-export function EditorialSite({ content = defaultSiteContent, projects = [] }: { content?: SiteContent; projects?: PortfolioProject[] }) {
+export function EditorialSite({ content = defaultSiteContent, projects = [], clientLogos = [] }: { content?: SiteContent; projects?: PortfolioProject[]; clientLogos?: ClientLogo[] }) {
   const [lang, setLang] = useState<Lang>("id");
   const [isChanging, setIsChanging] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
@@ -61,6 +63,7 @@ export function EditorialSite({ content = defaultSiteContent, projects = [] }: {
       <Navbar lang={lang} activeSection={activeSection} onToggleLanguage={toggleLanguage} />
       <main lang={lang}>
         <Hero lang={lang} content={content.hero} />
+        <ClientMarquee lang={lang} logos={clientLogos} />
         <Services lang={lang} content={content.services} />
         <Works lang={lang} content={content.works} projects={projects} />
         <Pricing lang={lang} content={content.pricing} />
@@ -143,6 +146,28 @@ function Hero({ lang, content }: { lang: Lang; content: SiteContent["hero"] }) {
         <span>{content.bottomCenter[lang]}</span>
         <a href="#services" className="scroll-cue"><span>{content.scrollCue[lang]}</span><span>↓︎</span></a>
       </div>
+    </section>
+  );
+}
+
+function ClientMarquee({ lang, logos }: { lang: Lang; logos: ClientLogo[] }) {
+  if (!logos.length) return null;
+
+  const renderLogos = (duplicate = false) => (
+    <div className="client-marquee-group" role={duplicate ? undefined : "list"} aria-hidden={duplicate || undefined}>
+      {logos.map((logo) => {
+        const image = <Image className="client-logo-image" src={logo.logo_url} alt={duplicate ? "" : logo.name} width={240} height={120} unoptimized />;
+        return <div className="client-logo-card" role={duplicate ? undefined : "listitem"} key={`${logo.id}-${duplicate ? "copy" : "item"}`}>
+          {logo.website_url ? <a href={logo.website_url} target="_blank" rel="noopener noreferrer" tabIndex={duplicate ? -1 : undefined} aria-label={duplicate ? undefined : `${logo.name} website`}>{image}</a> : image}
+        </div>;
+      })}
+    </div>
+  );
+
+  return (
+    <section className="client-marquee" aria-label={copy(lang, "Klien GwenMade", "GwenMade clients")}>
+      <p className="client-marquee-label">{copy(lang, "BRAND YANG PERNAH KAMI KERJAKAN", "BRANDS WE’VE WORKED WITH")}</p>
+      <div className="client-marquee-viewport"><div className="client-marquee-track">{renderLogos()}{renderLogos(true)}</div></div>
     </section>
   );
 }
@@ -405,6 +430,75 @@ function FAQ({ lang, content }: { lang: Lang; content: SiteContent["faq"] }) {
 }
 
 function Footer({ lang, content }: { lang: Lang; content: SiteContent["footer"] }) {
+  const [secretOpen, setSecretOpen] = useState(false);
+  const [secretClosing, setSecretClosing] = useState(false);
+  const reduceMotion = useReducedMotion() ?? false;
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const autoCloseTimerRef = useRef<number | null>(null);
+  const finishCloseTimerRef = useRef<number | null>(null);
+  const secretClosingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (autoCloseTimerRef.current !== null) window.clearTimeout(autoCloseTimerRef.current);
+      if (finishCloseTimerRef.current !== null) window.clearTimeout(finishCloseTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!secretOpen) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus?.isConnected) previousFocus.focus();
+      else document.querySelector<HTMLElement>(".site-header .wordmark")?.focus();
+    };
+  }, [secretOpen]);
+
+  function closeSecret() {
+    if (secretClosingRef.current) return;
+    secretClosingRef.current = true;
+    if (autoCloseTimerRef.current !== null) window.clearTimeout(autoCloseTimerRef.current);
+    setSecretClosing(true);
+    finishCloseTimerRef.current = window.setTimeout(() => {
+      setSecretOpen(false);
+      setSecretClosing(false);
+      secretClosingRef.current = false;
+      finishCloseTimerRef.current = null;
+    }, reduceMotion ? 100 : 1000);
+  }
+
+  function openSecret() {
+    if (secretOpen) return;
+    secretClosingRef.current = false;
+    setSecretClosing(false);
+    setSecretOpen(true);
+    autoCloseTimerRef.current = window.setTimeout(closeSecret, reduceMotion ? 3100 : 3800);
+  }
+
+  function handleSecretKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      closeSecret();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const controls = dialogRef.current?.querySelectorAll<HTMLButtonElement>("button:not([disabled])");
+    if (!controls?.length) return;
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   return (
     <footer className="footer">
       <div className="editorial-wrap">
@@ -421,8 +515,29 @@ function Footer({ lang, content }: { lang: Lang; content: SiteContent["footer"] 
             <div><span>{content.contactLabel[lang]}</span><a href={contacts[0].href} target="_blank" rel="noreferrer">{contacts[0].value} ↗︎</a><a href={contacts[1].href} target="_blank" rel="noreferrer">{contacts[1].value} ↗︎</a><a href={contacts[2].href} target="_blank" rel="noreferrer">{contacts[2].value} ↗︎</a></div>
           </div>
         </div>
-        <div className="footer-bottom"><span>© {new Date().getFullYear()} GWENMADE STUDIO</span><a href="https://gwenmade.site">GWENMADE.SITE</a><span>{content.bottomNote[lang]}</span></div>
+        <div className="footer-bottom"><span>© {new Date().getFullYear()} GWENMADE STUDIO</span><a href="https://gwenmade.site">GWENMADE.SITE</a><span>{content.bottomNote[lang]}</span><button className="footer-secret-trigger" type="button" aria-label={copy(lang, "Buka pesan rahasia", "Open the secret message")} aria-haspopup="dialog" aria-expanded={secretOpen} onClick={openSecret}>?</button></div>
       </div>
+      {secretOpen && <motion.div
+        className={`secret-overlay ${secretClosing ? "is-closing" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="secret-slogan-title"
+        ref={dialogRef}
+        onKeyDown={handleSecretKeyDown}
+        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 1.08, filter: "blur(12px)" }}
+        animate={secretClosing
+          ? { opacity: 0, scale: reduceMotion ? 1 : 0.94, y: reduceMotion ? 0 : "-2vh", filter: reduceMotion ? "blur(0px)" : "blur(10px)" }
+          : { opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+        transition={secretClosing
+          ? { duration: reduceMotion ? 0.1 : 1, ease: [0.76, 0, 0.24, 1] }
+          : { duration: reduceMotion ? 0.1 : 0.8, ease: [0.2, 0.7, 0.2, 1] }}
+      >
+        <div className="secret-countdown" aria-hidden="true"><motion.span initial={{ scaleX: 1 }} animate={{ scaleX: 0 }} transition={{ duration: reduceMotion ? 3.2 : 4.8, ease: "linear" }} /></div>
+        <motion.span className="secret-light-streak" aria-hidden="true" initial={{ opacity: 0, scaleX: 0, x: "-42vw" }} animate={{ opacity: [0, 0.7, 0], scaleX: [0, 1, 0.2], x: ["-42vw", "0vw", "42vw"] }} transition={{ delay: 0.55, duration: 0.9, ease: "easeInOut" }} />
+        <motion.div className="secret-overlay-top" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduceMotion ? 0 : 0.55, duration: reduceMotion ? 0.1 : 0.4 }}><button ref={closeRef} type="button" className="secret-close" onClick={closeSecret}><span>{copy(lang, "Tutup", "Close")}</span><X size={18} aria-hidden="true" /></button></motion.div>
+        <div className="secret-main"><motion.svg className="secret-bmw-logo" viewBox="0 0 100 100" role="img" aria-label="BMW logo" initial={{ opacity: 0, scale: 0.7, rotate: reduceMotion ? 0 : -55 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} transition={{ delay: reduceMotion ? 0 : 1.7, duration: reduceMotion ? 0.1 : 0.8, ease: [0.16, 1, 0.3, 1] }}><circle cx="50" cy="50" r="48" fill="#e5e3dd" /><circle cx="50" cy="50" r="45" fill="#080808" /><text x="50" y="14.5" fill="#f5f3ed" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fontWeight="700" letterSpacing="1.1">BMW</text><circle cx="50" cy="50" r="34" fill="#f5f3ed" /><path d="M50 50 L16 50 A34 34 0 0 1 50 16 Z" fill="#f5f3ed" /><path d="M50 50 L50 16 A34 34 0 0 1 84 50 Z" fill="#1769aa" /><path d="M50 50 L84 50 A34 34 0 0 1 50 84 Z" fill="#f5f3ed" /><path d="M50 50 L50 84 A34 34 0 0 1 16 50 Z" fill="#1769aa" /><circle cx="50" cy="50" r="34" fill="none" stroke="#101010" strokeWidth="1.5" /><path d="M50 16 V84 M16 50 H84" fill="none" stroke="#101010" strokeWidth="1.5" /></motion.svg><h1 id="secret-slogan-title"><motion.span initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduceMotion ? 0 : 0.9, duration: reduceMotion ? 0.1 : 0.45 }}>NEED MONEY FOR</motion.span><motion.s initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduceMotion ? 0 : 1.25, duration: reduceMotion ? 0.1 : 0.45 }}>BMW<motion.span className="secret-strike" aria-hidden="true" initial={{ scaleX: 0 }} animate={{ scaleX: 1, boxShadow: reduceMotion ? "0 0 5px #ffb493" : ["0 0 3px #cf694b", "0 0 14px #ffb493", "0 0 3px #cf694b"] }} transition={{ scaleX: { delay: reduceMotion ? 0 : 1.75, duration: reduceMotion ? 0.1 : 0.55, ease: [0.16, 1, 0.3, 1] }, boxShadow: { delay: reduceMotion ? 0 : 2.3, duration: 0.8, repeat: reduceMotion ? 0 : Infinity, ease: "easeInOut" } }} /></motion.s><motion.strong initial={{ opacity: 0, scale: 0.92, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: reduceMotion ? 0 : 1.85, duration: reduceMotion ? 0.1 : 0.55, ease: [0.16, 1, 0.3, 1] }}>CLAUDE MAX</motion.strong></h1></div>
+        <motion.div className="secret-overlay-bottom" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduceMotion ? 0 : 0.65, duration: reduceMotion ? 0.1 : 0.4 }}><button type="button" className="secret-return" onClick={closeSecret}><ArrowLeft size={16} aria-hidden="true" />{copy(lang, "Kembali ke studio", "Back to the studio")}</button></motion.div>
+      </motion.div>}
     </footer>
   );
 }
