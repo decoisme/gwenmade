@@ -13,6 +13,7 @@ const contacts = [
   { label: "WhatsApp 01", value: "+62 815-3322-7007", href: "https://wa.me/6281533227007" },
   { label: "WhatsApp 02", value: "+62 822-5822-1745", href: "https://wa.me/6282258221745" },
   { label: "Instagram", value: "@nadeqo", href: "https://instagram.com/nadeqo" },
+  { label: "LinkedIn", value: "@decoisme", href: "https://www.linkedin.com/in/decoisme/" },
 ];
 
 
@@ -512,7 +513,7 @@ function Footer({ lang, content }: { lang: Lang; content: SiteContent["footer"] 
           </div>
           <div className="footer-links">
             <div><span>{content.exploreLabel[lang]}</span><a href="#services">{copy(lang, "Layanan", "Services")}</a><a href="#works">{copy(lang, "Karya", "Work")}</a><a href="#pricing">{copy(lang, "Harga", "Pricing")}</a><a href="#process">{copy(lang, "Proses", "Process")}</a><a href="#faq">FAQ</a></div>
-            <div><span>{content.contactLabel[lang]}</span><a href={contacts[0].href} target="_blank" rel="noreferrer">{contacts[0].value} ↗︎</a><a href={contacts[1].href} target="_blank" rel="noreferrer">{contacts[1].value} ↗︎</a><a href={contacts[2].href} target="_blank" rel="noreferrer">{contacts[2].value} ↗︎</a></div>
+            <div><span>{content.contactLabel[lang]}</span><a href={contacts[0].href} target="_blank" rel="noreferrer">{contacts[0].value} ↗︎</a><a href={contacts[1].href} target="_blank" rel="noreferrer">{contacts[1].value} ↗︎</a><a href={contacts[2].href} target="_blank" rel="noreferrer">{contacts[2].value} ↗︎</a><a href={contacts[3].href} target="_blank" rel="noreferrer">{contacts[3].value} ↗︎</a></div>
           </div>
         </div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} GWENMADE STUDIO</span><a href="https://gwenmade.site">GWENMADE.SITE</a><span>{content.bottomNote[lang]}</span><button className="footer-secret-trigger" type="button" aria-label={copy(lang, "Buka pesan rahasia", "Open the secret message")} aria-haspopup="dialog" aria-expanded={secretOpen} onClick={openSecret}>?</button></div>
